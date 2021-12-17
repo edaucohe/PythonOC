@@ -55,20 +55,20 @@ if reponse.ok:
     img = soup.find_all('img')
     image = img[0]
     image_url = image['src'] # Pour recuperer un attribut
-
-    print("image : ",img)
-    print("image : ",image_url)
-    image = str(image)
+    image_url = image_url.replace('../../', '')
+    # print("image : ",img)
+    # print("image : ",image_url)
+    # image = str(image)
     # print("image : ",image)
 
-    for i in range(len(image)):
-        if image[i:i+5] == "media":
-            # print("valor de media encontrado en :", i)
-            src = image[i:len(image)-3]
-            break
-
+    # for i in range(len(image)):
+    #     if image[i:i+5] == "media":
+    #         # print("valor de media encontrado en :", i)
+    #         src = image[i:len(image)-3]
+    #         break
+    #
     URL = 'http://books.toscrape.com/'
-    print("URL de l'image : ", URL + src)
+    print("URL de l'image : ", URL + image_url)
 
     # print(soup)
 
