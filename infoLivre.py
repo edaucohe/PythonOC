@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+# import codecs
 
 #### CONSTANTS ####
 url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
@@ -84,12 +85,46 @@ def extract_book_info(html_contenu: str):
     else:
         print("Il y a un problème de request")
 
+## Créer un fichier csv ##
+# def csv():
+#     with open('livre.csv', 'w', newline='') as csvfile:
+#         livre.writer(csvfile, delimiter=' ', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#         spamwriter.writerow(['Spam'] * 5 + ['Baked Beans'])
+#         spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+
 #### MAIN FUNCTION ####
 
 def main():
     reponse = fetch_html(url_livre)
     info = extract_book_info(reponse)
     print(info)
+    # csv()
+    # with open('egg.csv', 'w', newline='') as csvfile:
+    #     spamwriter = csv.writer(csvfile, delimiter=' ',
+    #                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #     spamwriter.writerows(['Spam'] * 5 + ['Baked Beans'])
+    #     spamwriter.writerow(['Spam', 'Lovely Spam', 'Wonderful Spam'])
+    #
+    # with open('names.csv', 'w', newline='') as csvfile:
+    #     fieldnames = ['first_name', 'last_name']
+    #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+    #
+    #     writer.writeheader()
+    #     writer.writerow({'first_name': 'Baked', 'last_name': 'Beans'})
+    #     writer.writerow({'first_name': 'Lovely', 'last_name': 'Spam'})
+    #     writer.writerow({'first_name': 'Wonderful', 'last_name': 'Spam'})
+
+
+
+    with open('livre.csv', 'w', encoding = 'utf8', newline='') as csvfile:
+        tetes = list(info.keys())
+        print(tetes)
+        donnes_livres = list(info.values())
+        print(donnes_livres)
+
+        writer = csv.DictWriter(csvfile, fieldnames=tetes)
+        writer.writeheader()
+        writer.writerow({tetes[0]:donnes_livres[0],tetes[1]:donnes_livres[1],tetes[2]:donnes_livres[2],tetes[3]:donnes_livres[3],tetes[4]:donnes_livres[4],tetes[5]:donnes_livres[5],tetes[6]:donnes_livres[6],tetes[7]:donnes_livres[7],tetes[8]:donnes_livres[8]})
 
 if __name__ == '__main__':
     main()
