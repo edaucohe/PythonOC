@@ -1,6 +1,7 @@
 #### LIBRARIES ####
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 #### CONSTANTS ####
 url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
