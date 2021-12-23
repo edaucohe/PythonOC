@@ -28,14 +28,25 @@ def fetch_html(url) -> str:
 def recuperer_urls_categories(url: str) -> list[str]:
     retour = fetch_html(url)
     list_html_categories = retour.find('aside').find_next('li').find_all('li')
-    # print(list_html_categories)
     liens_categories = []
     index = url.replace('books_1/index.html', '')
-    for nb_categories in range(0, len(list_html_categories)):
-        liens_categories.append(list_html_categories[nb_categories].find('a')['href'])
 
-    print(type(liens_categories[0]))
-    print("liens des categories : ", liens_categories)
+    for nb_categories in range(0, len(list_html_categories)):
+        liens_categories.append(index + list_html_categories[nb_categories].find('a')['href'].replace('../',''))
+
+    return liens_categories
+
+def recuperer_urls_livres(url_categories: list[str]) -> list[str]:
+    # retour = []
+    retour = fetch_html(url_categories[0])
+    list_html_livres = retour.find_all('h3')
+    print(list_html_livres)
+    liens_livres = []
+    index_categories = 'http://books.toscrape.com/catalogue/'
+
+    for nb_livres in range(0, len(list_html_livres)):
+        liens_livres.append(index_categories + list_html_livres[nb_livres].find_next('a')['href'].replace('../../../',''))
+        print(liens_livres)
 
 # def extract_categorie_info(soup):
 #     '''
@@ -142,7 +153,9 @@ def main():
     url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
 
     urls_categories = recuperer_urls_categories(url_index)
+    print("liens des categories : ", urls_categories)
 
+    recuperer_urls_livres(urls_categories)
 
     # reponse = fetch_html(url_categorie)
     # info = extract_categorie_info(reponse)
