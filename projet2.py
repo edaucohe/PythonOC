@@ -21,32 +21,52 @@ def fetch_html(url) -> str:
         # print(soup)
 
     else:
+        contenu_text = ''
         print("Il y a un problème de request")
 
     return contenu_texte
 
-def recuperer_urls_categories(url: str) -> list[str]:
-    retour = fetch_html(url)
+def recuperer_elements(index: str, list_html: str) -> list[str]:
+    '''
+    Les éléments à récupérer sont "les liens" et "les textes" des categories et des livres
+    :param index:
+    :param list_html:
+    :return:
+    '''
+    liens_elements = []
+    titres_elements = []
+
+    for nb_elements in range(0, len(list_html)):
+        if index == 'http://books.toscrape.com/catalogue/category/':
+            liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
+            titres_elements.append(list_html[nb_elements].find_next('a').text.replace(' ','').replace('\n',''))
+
+        else:
+            liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../../../',''))
+
+    return liens_elements, titres_elements
+
+def recuperer_elements_categories(url_index: str) -> list[str]:
+    retour = fetch_html(url_index)
     list_html_categories = retour.find('aside').find_next('li').find_all('li')
-    liens_categories = []
-    index = url.replace('books_1/index.html', '')
 
-    for nb_categories in range(0, len(list_html_categories)):
-        liens_categories.append(index + list_html_categories[nb_categories].find('a')['href'].replace('../',''))
+    index_principal = 'http://books.toscrape.com/catalogue/category/'
+    liens_categories, titres_categories = recuperer_elements(index_principal, list_html_categories)
+    # print('titres elements: ', titres_categories)
+    return liens_categories, titres_categories
 
-    return liens_categories
-
-def recuperer_urls_livres(url_categories: list[str]) -> list[str]:
-    # retour = []
+def recuperer_elements_livres(url_categories: list[str]) -> list[str]:
     retour = fetch_html(url_categories[0])
     list_html_livres = retour.find_all('h3')
-    print(list_html_livres)
-    liens_livres = []
-    index_categories = 'http://books.toscrape.com/catalogue/'
 
-    for nb_livres in range(0, len(list_html_livres)):
-        liens_livres.append(index_categories + list_html_livres[nb_livres].find_next('a')['href'].replace('../../../',''))
-        print(liens_livres)
+    index_categories = 'http://books.toscrape.com/catalogue/'
+    liens_livres = recuperer_elements(index_categories, list_html_livres)
+
+    return liens_livres
+
+def recuperer_infos_livres():
+
+    pass
 
 # def extract_categorie_info(soup):
 #     '''
@@ -152,10 +172,13 @@ def main():
     url_categorie = 'http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
     url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
 
-    urls_categories = recuperer_urls_categories(url_index)
+    urls_categories, titres_categories = recuperer_elements_categories(url_index)
     print("liens des categories : ", urls_categories)
+    print("titres des categories : ", titres_categories)
 
-    recuperer_urls_livres(urls_categories)
+    urls_livres, titres_livres = recuperer_elements_livres(urls_categories)
+    print("liens des livres : ", urls_livres)
+    print("titres des livres : ", titres_livres)
 
     # reponse = fetch_html(url_categorie)
     # info = extract_categorie_info(reponse)
