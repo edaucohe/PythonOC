@@ -31,41 +31,50 @@ def recuperer_elements(index: str, list_html: str) -> list[str]:
     :param list_html:
     :return:
     '''
-    liens_elements = []
+    # liens_elements = []
     titres_elements = []
     racine_elements = []
 
     for nb_elements in range(0, len(list_html)):
         if index == 'http://books.toscrape.com/catalogue/category/':
-            liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
+            '''
+            Recuperer elements des categories
+            '''
+            # liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
             racine_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../', '').replace('index.html',''))
             titres_elements.append(list_html[nb_elements].find_next('a').text.replace(' ','').replace('\n',''))
 
         else:
-            liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../../../',''))
+            '''
+            Recuperer elements des livres
+            '''
+            racine_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../../../',''))
             titres_elements.append(list_html[nb_elements].find_next('a')['title'].replace('â\x80\x99',''))
 
-    return liens_elements, titres_elements, racine_elements
+    # return liens_elements
+    return racine_elements, titres_elements
 
 def recuperer_elements_categories(url_index: str) -> list[str]:
     retour = fetch_html(url_index)
     list_html_categories = retour.find('aside').find_next('li').find_all('li')
 
     index_principal = 'http://books.toscrape.com/catalogue/category/'
-    liens_categories, titres_categories, racine_elements = recuperer_elements(index_principal, list_html_categories)
-    return liens_categories, titres_categories, racine_elements
+    racine_categories, titres_categories = recuperer_elements(index_principal, list_html_categories) # liens_categories
+    # liens_categories
+    return racine_categories, titres_categories
 
 def recuperer_elements_livres(url_categories: list[str]) -> list[str]:
     retour = fetch_html(url_categories)
     list_html_livres = retour.find_all('h3')
 
     index_categories = 'http://books.toscrape.com/catalogue/'
-    liens_livres, titres_livres, racine_livres = recuperer_elements(index_categories, list_html_livres)
+    racine_livres, titres_livres  = recuperer_elements(index_categories, list_html_livres) # liens_livres
 
     print("nb des livres : ", len(titres_livres))
-    print(liens_livres)
+    # print(liens_livres)
 
-    return liens_livres, titres_livres
+    # return liens_livres
+    return racine_livres, titres_livres
 
 def nb_pages_categories(url_categories, nb_next) -> list[str]:
     global tous_urls_categories
@@ -73,9 +82,13 @@ def nb_pages_categories(url_categories, nb_next) -> list[str]:
     tous_urls_categories.append(nouvelle_page)
 
     retour = fetch_html(nouvelle_page)
+    # if 'pager' in retour:
+    #     pager = retour.findAll('li')
+    #     pager = pager[len(pager) - 1].text
+    # else:
+    #     pager = ''
     pager = retour.findAll('li')
     pager = pager[len(pager) - 1].text
-
     if pager == 'next':
         nb_next += 1
         nb_pages_categories(url_categories, nb_next)
@@ -87,7 +100,6 @@ def nb_pages_categories(url_categories, nb_next) -> list[str]:
     return tous_urls_categories
 
 def recuperer_infos_livres():
-
     pass
 
 # def extract_categorie_info(soup):
@@ -195,38 +207,27 @@ def main():
     # url_categorie = 'http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
     # url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
 
-    dict_categories = {}
-
-    urls_categories, titres_categories, racine_categories = recuperer_elements_categories(url_index)
-    print("liens des categories : ", urls_categories)
+    racine_categories, titres_categories = recuperer_elements_categories(url_index) # urls_categories
+    # print("liens des categories : ", urls_categories)
     print("titres des categories : ", titres_categories)
     print("racine des categories : ", racine_categories)
-    # dict_categories = dict(zip([titres_categories],[urls_categories]))
-    # # c = dict(zip(['one', 'two', 'three'], [1, 2, 3]))
-    # print('dictionnaire : ',dict_categories)
-    # for nb_categories in len(nb_pages_categories) -1:
-    #     nb = 1
-    #     tous_les_urls_categories = nb_pages_categories(racine_categories[nb_categories], nb)
+
     nb = 1
-    tous_les_urls_categories = nb_pages_categories(racine_categories[3], nb)
-    # nb_categorie = 0
-    # print(type(nb_categorie))
-    # print(len(tous_les_urls_categories))
+    tous_les_urls_categories = nb_pages_categories(racine_categories[1], nb)
     urls_livres_tous = []
     titres_livres_tous = []
+
     for nb_categorie in range(len(tous_les_urls_categories)):
-        # tous_les_urls_categories = nb_pages_categories(racine_categories[nb_categorie], nb)
         print('iteration : ', nb_categorie)
         urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories[nb_categorie])
-        urls_livres_tous.append(urls_livres)
-        titres_livres_tous.append(titres_livres)
-
-
+        urls_livres_tous.extend(urls_livres)
+        titres_livres_tous.extend(titres_livres)
 
     # urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories)
-    print("nb des livres : ", len(urls_livres_tous))
+    print("nb de pages : ", len(urls_livres_tous))
     print("liens des livres : ", urls_livres_tous)
     print("titres des livres : ", titres_livres_tous)
+    print('numero de livres : ', len(titres_livres_tous))
 
     # reponse = fetch_html(url_categorie)
     # info = extract_categorie_info(reponse)
