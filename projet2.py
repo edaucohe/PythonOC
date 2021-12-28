@@ -201,6 +201,44 @@ def recuperer_infos_livres():
 #
 #     return info_livre
 
+
+def recuperer_information_d_une_page_categorie(lien_vers_la_page: str) -> Tuple[List[Dict[str, str]], bool, str]:
+    contenu_html_d_une_page_categorie = fetch_html(lien_vers_la_page)
+
+    liens_vers_des_livres: List[str] = extraire_liste_de_livre_de_la_page(contenu_html_d_une_page_categorie)
+    info_des_livres_de_la_categorie = []
+    for lien_vers_un_livre in liens_vers_des_livres:
+        info_du_livre: Dict[str, str] = recuperer_information_d_un_livre(lien_vers_un_livre)
+        info_des_livres_de_la_categorie.append(info_du_livre)
+
+    lien_vers_la_page_suivante: bool = extraire_le_lien_vers_la_page_suivante(contenu_html_d_une_page_categorie)
+    a_une_page_suivante = lien_vers_la_page_suivante is not None
+
+    return info_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante
+
+def recuperer_informations_livres_d_une_categorie(lien_vers_la_page_index_d_une_category) -> List[Dict[str, str]]:
+    infos_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_index_d_une_category)
+
+    while a_une_page_suivante:
+        infos_des_livres_de_la_page_suivante_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_suivante)
+        infos_des_livres_de_la_categorie += infos_des_livres_de_la_page_suivante_de_la_categorie
+
+    return infos_des_livres_de_la_categorie
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 def main():
 
     url_index = 'http://books.toscrape.com/catalogue/category/books_1/index.html'
