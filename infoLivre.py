@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
+import sys
 # import codecs
 
 #### CONSTANTS ####
@@ -96,6 +97,10 @@ def extract_book_info(html_contenu: str):
 
 def main():
     reponse = fetch_html(url_livre)
+    print(reponse.text)
+
+    print(sys.getdefaultencoding())
+
     info = extract_book_info(reponse)
     print(info)
     # csv()

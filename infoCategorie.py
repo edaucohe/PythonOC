@@ -55,8 +55,8 @@ if reponse.ok:
         reponse = requests.get(nouvelle_page)
         soup = BeautifulSoup(reponse.text, "html.parser")
         h3 = soup.find_all('h3')
-        print(h3)
-        print(len(h3))
+        # print(h3)
+        # print(len(h3))
 
         for i in range(0, len(h3)):
             titre.append(h3[i].find_next('a')['title'])  # "h3" contient "a", dont l'attribut "title" va dans une liste vide
