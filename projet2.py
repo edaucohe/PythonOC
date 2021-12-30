@@ -213,7 +213,7 @@ def main():
     print("racine des categories : ", racine_categories)
 
     nb = 1
-    tous_les_urls_categories = nb_pages_categories(racine_categories[1], nb)
+    tous_les_urls_categories = nb_pages_categories(racine_categories[3], nb)
     urls_livres_tous = []
     titres_livres_tous = []
 
