@@ -82,11 +82,6 @@ def nb_pages_categories(url_categories, nb_next) -> list[str]:
     tous_urls_categories.append(nouvelle_page)
 
     retour = fetch_html(nouvelle_page)
-    # if 'pager' in retour:
-    #     pager = retour.findAll('li')
-    #     pager = pager[len(pager) - 1].text
-    # else:
-    #     pager = ''
     pager = retour.findAll('li')
     pager = pager[len(pager) - 1].text
     if pager == 'next':
@@ -223,31 +218,31 @@ def recuperer_liste_categories(html_page) -> list[str]:
 
     return racine_categories
 
-def recuperer_nombre_pages_par_categorie(contenu_pager: str) -> int:
-    next = contenu_pager[len(contenu_pager) - 1]['class']
+
+def recuperer_url_page_suivante(html_page: str, nb_de_pages: int): #-> :
+    nouvelle_page = []
+    # print('nb de pages : ', nb_de_pages)
+    if nb_de_pages == 0:
+        nouvelle_page = html_page + 'index.html'
+
+    else:
+        for nb_page in range(nb_de_pages):
+            nouvelle_page.append(html_page + ('page-' + str(nb_page+1) + '.html'))
+
+    return nouvelle_page
+
+def recuperer_nb_page_suivantes(html_page: str) -> int:
+    contenu_html = fetch_html(html_page)
+    pager = contenu_html.findAll('li')
+    next = pager[len(pager) - 1]['class']
     if 'next' in next:
-        nb_page = contenu_pager[len(contenu_pager) - 2].text
+        nb_page = pager[len(pager) - 2].text
         nb_page = nb_page.replace('Page 1 of ', '').replace(' ', '').replace('/n', '')
         nb_page = int(nb_page)
     else:
         nb_page = 0
 
     return nb_page
-
-def recuperer_nb_page_suivantes(html_page: str) -> int:
-    contenu_html = fetch_html(html_page)
-    pager = contenu_html.findAll('li')
-    nombre_pages_par_categorie = recuperer_nombre_pages_par_categorie(pager)
-    # print('nombre de pages par categorie : ',nombre_pages_par_categorie)
-
-    if nombre_pages_par_categorie == 0:
-        nouvelle_page = html_page + 'index.html'
-
-    else:
-        nouvelle_page = html_page + ('page-' + str(nombre_pages_par_categorie) + '.html')
-
-    print('nouvelle page de la categorie :', nouvelle_page)
-    return nombre_pages_par_categorie
 
 def recuperer_livres_par_categorie(html_page: str) -> list[str]:
     contenu_html = fetch_html(html_page)
@@ -283,15 +278,23 @@ def info_par_categorie(html_page: str): #-> Tuple[List[Dict[str, str]], bool, st
     '''
     # list_html_livres = fetch_html(lien_page)
     # print('contenu html par categorie : ',list_html_livres)
-    print('contenu html : ',html_page)
-
-
-    livres_par_categorie: list[str] = recuperer_livres_par_categorie(html_page)
+    # print('contenu html : ',html_page)
 
     nombre_pages_par_categorie = recuperer_nb_page_suivantes(html_page)
-    print('nombre de pages suivantes : ', nombre_pages_par_categorie)
+    # print('nombre de pages suivantes : ', nombre_pages_par_categorie)
 
+    urls_pages_suivantes = recuperer_url_page_suivante(html_page, nombre_pages_par_categorie)
+    print('urls des pages suivantes d une categorie : ', urls_pages_suivantes)
 
+    livres_par_categorie = []
+    for url_page_suivante in urls_pages_suivantes:
+        if nombre_pages_par_categorie == 0:
+            livres_par_categorie = recuperer_livres_par_categorie(urls_pages_suivantes)
+            break
+        else:
+            livres_par_categorie.extend(recuperer_livres_par_categorie(url_page_suivante))
+
+    # livres_par_categorie: list[str] = recuperer_livres_par_categorie(html_page)
 
     # si_page_suivante = lien_page_suivante is not None
 
@@ -314,11 +317,12 @@ def recuperer_urls_livres_par_categorie(lien_page: str): #-> Tuple[List[Dict[str
     # infos_livres_par_categorie, si_page_suivante, lien__page_suivante = info_par_categorie(lien_page)
 
     urls_livres_par_categorie, nombre_pages_par_categorie = info_par_categorie(lien_page)
-    print('liens des livres par categorie : ',urls_livres_par_categorie)
+    # print('liens des livres par categorie : ',urls_livres_par_categorie)
 
-    for numero_page in range(nombre_pages_par_categorie):
-        urls_suivantes_livres_par_categorie, nouveau_nombre_pages_par_categorie = info_par_categorie(lien_page)
-        urls_livres_par_categorie.append(urls_suivantes_livres_par_categorie)
+    # il va falloir supprimer ce "for"
+    # for numero_page in range(nombre_pages_par_categorie-1):
+    #     urls_suivantes_livres_par_categorie, nouveau_nombre_pages_par_categorie = info_par_categorie(lien_page)
+    #     urls_livres_par_categorie.extend(urls_suivantes_livres_par_categorie)
 
     return urls_livres_par_categorie
 
@@ -326,11 +330,12 @@ def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
     contenu_html_index = fetch_html(lien_page)
 
     liens_categories: list[str] = recuperer_liste_categories(contenu_html_index)
-    print('lien des categories : ', liens_categories)
+    print('liens des categories : ', liens_categories)
 
     for lien_categorie in liens_categories:
-        tous_les_urls_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
-        print('liens complets des livres par categorie : ', tous_les_urls_par_categorie)
+        urls_livres_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
+        print('nb de livres de la categorie : ', len(urls_livres_par_categorie))
+        print('liens complets des livres par categorie : ', urls_livres_par_categorie)
 
     # lien_page_suivante: bool = recuperer_lien_page_suivante(contenu_html_categorie)
     # print('valeur de pager : ', lien_page_suivante)
@@ -359,11 +364,7 @@ def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
 #     return infos_des_livres_de_la_categorie
 
 def main():
-
     url_index = 'http://books.toscrape.com/catalogue/category/books_1/index.html'
-    # url_categorie = 'http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
-    # url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
-
     info_livres(url_index)
 
     # racine_categories, titres_categories = recuperer_elements_categories(url_index) # urls_categories
