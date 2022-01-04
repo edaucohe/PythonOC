@@ -201,43 +201,162 @@ def recuperer_infos_livres():
 #
 #     return info_livre
 
+# def recuperer_lien_page_suivante(html_page) -> bool:
+#     pager = html_page.findAll('li')
+#     # pager = pager[len(pager) - 1].text
+#     return pager
 
-def recuperer_information_d_une_page_categorie(lien_vers_la_page: str) -> Tuple[List[Dict[str, str]], bool, str]:
-    contenu_html_d_une_page_categorie = fetch_html(lien_vers_la_page)
+def recuperer_liste_categories(html_page) -> list[str]:
+    list_html_categories = html_page.find('aside').find_next('li').find_all('li')
 
-    liens_vers_des_livres: List[str] = extraire_liste_de_livre_de_la_page(contenu_html_d_une_page_categorie)
-    info_des_livres_de_la_categorie = []
-    for lien_vers_un_livre in liens_vers_des_livres:
-        info_du_livre: Dict[str, str] = recuperer_information_d_un_livre(lien_vers_un_livre)
-        info_des_livres_de_la_categorie.append(info_du_livre)
+    index_categorie = 'http://books.toscrape.com/catalogue/category/'
+    # titres_livres = []
+    racine_categories = []
 
-    lien_vers_la_page_suivante: bool = extraire_le_lien_vers_la_page_suivante(contenu_html_d_une_page_categorie)
-    a_une_page_suivante = lien_vers_la_page_suivante is not None
+    for nb_elements in range(0, len(list_html_categories)):
+        '''
+        Recuperer elements des categories
+        '''
+        # liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
+        # titres_livres.append(list_html_categories[nb_elements].find_next('a').text.replace(' ', '').replace('\n', ''))
+        racine_categories.append(index_categorie + list_html_categories[nb_elements].find_next('a')['href'].replace('../', '').replace('index.html', ''))
 
-    return info_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante
+    return racine_categories
 
-def recuperer_informations_livres_d_une_categorie(lien_vers_la_page_index_d_une_category) -> List[Dict[str, str]]:
-    infos_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_index_d_une_category)
+def recuperer_nombre_pages_par_categorie(contenu_pager: str) -> int:
+    next = contenu_pager[len(contenu_pager) - 1]['class']
+    if 'next' in next:
+        nb_page = contenu_pager[len(contenu_pager) - 2].text
+        nb_page = nb_page.replace('Page 1 of ', '').replace(' ', '').replace('/n', '')
+        nb_page = int(nb_page)
+    else:
+        nb_page = 0
 
-    while a_une_page_suivante:
-        infos_des_livres_de_la_page_suivante_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_suivante)
-        infos_des_livres_de_la_categorie += infos_des_livres_de_la_page_suivante_de_la_categorie
+    return nb_page
 
-    return infos_des_livres_de_la_categorie
+def recuperer_nb_page_suivantes(html_page: str) -> int:
+    contenu_html = fetch_html(html_page)
+    pager = contenu_html.findAll('li')
+    nombre_pages_par_categorie = recuperer_nombre_pages_par_categorie(pager)
+    # print('nombre de pages par categorie : ',nombre_pages_par_categorie)
+
+    if nombre_pages_par_categorie == 0:
+        nouvelle_page = html_page + 'index.html'
+
+    else:
+        nouvelle_page = html_page + ('page-' + str(nombre_pages_par_categorie) + '.html')
+
+    print('nouvelle page de la categorie :', nouvelle_page)
+    return nombre_pages_par_categorie
+
+def recuperer_livres_par_categorie(html_page: str) -> list[str]:
+    contenu_html = fetch_html(html_page)
+    list_html_livres = contenu_html.find_all('h3')
+
+    index_livres = 'http://books.toscrape.com/catalogue/'
+
+    # print("nb des livres : ", len(titres_livres))
+    # titres_elements = []
+    racine_livres = []
+
+    for nb_elements in range(0, len(list_html_livres)):
+        '''
+        Recuperer elements des livres
+        '''
+        racine_livres.append(index_livres + list_html_livres[nb_elements].find_next('a')['href'].replace('../../../', ''))
+        # titres_elements.append(list_html[nb_elements].find_next('a')['title'].replace('â\x80\x99', ''))
+
+    return racine_livres
+
+def info_par_categorie(html_page: str): #-> Tuple[List[Dict[str, str]], bool, str]:
+    '''
+    Entrée :
+    - url de l'index d'une categorie
+
+    Sorie :
+    - Tous les livres d'une page d'une categorie
+    - S'il y a une page suivante dans une categorie
+    - L'url de la page suivante d'une categorie si c'est le cas
+
+    :param html_page:
+    :return: livres_par_categorie
+    '''
+    # list_html_livres = fetch_html(lien_page)
+    # print('contenu html par categorie : ',list_html_livres)
+    print('contenu html : ',html_page)
+
+
+    livres_par_categorie: list[str] = recuperer_livres_par_categorie(html_page)
+
+    nombre_pages_par_categorie = recuperer_nb_page_suivantes(html_page)
+    print('nombre de pages suivantes : ', nombre_pages_par_categorie)
 
 
 
+    # si_page_suivante = lien_page_suivante is not None
 
+    return livres_par_categorie, nombre_pages_par_categorie
 
+    # liens_des_livres: list[str] = liste_livres_par_page(contenu_html_page_categorie)
+    info_des_livres_par_categorie = []
 
+    # for lien_livre in liens_des_livres:
+    #     info_du_livre: Dict[str, str] = recuperer_information_d_un_livre(lien_livre)
+    #     info_des_livres_par_categorie.append(info_du_livre)
+    #
+    # lien_vers_la_page_suivante: bool = extraire_le_lien_vers_la_page_suivante(contenu_html_d_une_page_categorie)
+    # a_une_page_suivante = lien_vers_la_page_suivante is not None
 
+    # return info_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante
+    # return info_des_livres_de_la_categorie
 
+def recuperer_urls_livres_par_categorie(lien_page: str): #-> Tuple[List[Dict[str, str]], bool, str]:
+    # infos_livres_par_categorie, si_page_suivante, lien__page_suivante = info_par_categorie(lien_page)
 
+    urls_livres_par_categorie, nombre_pages_par_categorie = info_par_categorie(lien_page)
+    print('liens des livres par categorie : ',urls_livres_par_categorie)
 
+    for numero_page in range(nombre_pages_par_categorie):
+        urls_suivantes_livres_par_categorie, nouveau_nombre_pages_par_categorie = info_par_categorie(lien_page)
+        urls_livres_par_categorie.append(urls_suivantes_livres_par_categorie)
 
+    return urls_livres_par_categorie
 
+def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
+    contenu_html_index = fetch_html(lien_page)
 
+    liens_categories: list[str] = recuperer_liste_categories(contenu_html_index)
+    print('lien des categories : ', liens_categories)
 
+    for lien_categorie in liens_categories:
+        tous_les_urls_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
+        print('liens complets des livres par categorie : ', tous_les_urls_par_categorie)
+
+    # lien_page_suivante: bool = recuperer_lien_page_suivante(contenu_html_categorie)
+    # print('valeur de pager : ', lien_page_suivante)
+
+# def recuperer_information_d_une_page_categorie(lien_vers_la_page: str) -> Tuple[List[Dict[str, str]], bool, str]:
+#     contenu_html_d_une_page_categorie = fetch_html(lien_vers_la_page)
+#
+#     liens_vers_des_livres: List[str] = extraire_liste_de_livre_de_la_page(contenu_html_d_une_page_categorie)
+#     info_des_livres_de_la_categorie = []
+#     for lien_vers_un_livre in liens_vers_des_livres:
+#         info_du_livre: Dict[str, str] = recuperer_information_d_un_livre(lien_vers_un_livre)
+#         info_des_livres_de_la_categorie.append(info_du_livre)
+#
+#     lien_vers_la_page_suivante: bool = extraire_le_lien_vers_la_page_suivante(contenu_html_d_une_page_categorie)
+#     a_une_page_suivante = lien_vers_la_page_suivante is not None
+#
+#     return info_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante
+#
+# def recuperer_informations_livres_d_une_categorie(lien_vers_la_page_index_d_une_category) -> List[Dict[str, str]]:
+#     infos_des_livres_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_index_d_une_category)
+#
+#     while a_une_page_suivante:
+#         infos_des_livres_de_la_page_suivante_de_la_categorie, a_une_page_suivante, lien_vers_la_page_suivante = recuperer_information_d_une_page_categorie(lien_vers_la_page_suivante)
+#         infos_des_livres_de_la_categorie += infos_des_livres_de_la_page_suivante_de_la_categorie
+#
+#     return infos_des_livres_de_la_categorie
 
 def main():
 
@@ -245,27 +364,29 @@ def main():
     # url_categorie = 'http://books.toscrape.com/catalogue/category/books/sequential-art_5/index.html'
     # url_livre = 'http://books.toscrape.com/catalogue/i-had-a-nice-time-and-other-lies-how-to-find-love-sht-like-that_814/index.html'
 
-    racine_categories, titres_categories = recuperer_elements_categories(url_index) # urls_categories
-    # print("liens des categories : ", urls_categories)
-    print("titres des categories : ", titres_categories)
-    print("racine des categories : ", racine_categories)
+    info_livres(url_index)
 
-    nb = 1
-    tous_les_urls_categories = nb_pages_categories(racine_categories[3], nb)
-    urls_livres_tous = []
-    titres_livres_tous = []
-
-    for nb_categorie in range(len(tous_les_urls_categories)):
-        print('iteration : ', nb_categorie)
-        urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories[nb_categorie])
-        urls_livres_tous.extend(urls_livres)
-        titres_livres_tous.extend(titres_livres)
-
-    # urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories)
-    print("nb de pages : ", len(urls_livres_tous))
-    print("liens des livres : ", urls_livres_tous)
-    print("titres des livres : ", titres_livres_tous)
-    print('numero de livres : ', len(titres_livres_tous))
+    # racine_categories, titres_categories = recuperer_elements_categories(url_index) # urls_categories
+    # # print("liens des categories : ", urls_categories)
+    # print("titres des categories : ", titres_categories)
+    # print("racine des categories : ", racine_categories)
+    #
+    # nb = 1
+    # tous_les_urls_categories = nb_pages_categories(racine_categories[3], nb)
+    # urls_livres_tous = []
+    # titres_livres_tous = []
+    #
+    # for nb_categorie in range(len(tous_les_urls_categories)):
+    #     print('iteration : ', nb_categorie)
+    #     urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories[nb_categorie])
+    #     urls_livres_tous.extend(urls_livres)
+    #     titres_livres_tous.extend(titres_livres)
+    #
+    # # urls_livres, titres_livres = recuperer_elements_livres(tous_les_urls_categories)
+    # print("nb de pages : ", len(urls_livres_tous))
+    # print("liens des livres : ", urls_livres_tous)
+    # print("titres des livres : ", titres_livres_tous)
+    # print('numero de livres : ', len(titres_livres_tous))
 
     # reponse = fetch_html(url_categorie)
     # info = extract_categorie_info(reponse)
