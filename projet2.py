@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Dict
 import csv
-import sys
 
 tous_urls_categories = []
 
@@ -201,11 +200,74 @@ def recuperer_infos_livres():
 #     # pager = pager[len(pager) - 1].text
 #     return pager
 
-def recuperer_liste_categories(html_page) -> list[str]:
+def recuperer_donnees_livres(html_page: str): #->:
+    soup = fetch_html(html_page)
+    ### titre du livre ###
+    titre = soup.find('h1')
+    titre = titre.text
+    print("Titre: ", titre)
+
+    ### UPC, Prix sans taxe, Prix avec taxe, disponibilité et Review ###
+    td = soup.findAll(
+        'td')  # UPC, les prix, la dispo et les reviews se trouvent dans les seuls "td" qu'il y a dans le code
+    # print(td)
+    upc = td[0].text
+    prix_exc = td[2]
+    prix_inc = td[3]
+    dispo = td[5]
+    review = td[6].text
+    # print(type(dispo))
+    prix_exc = prix_exc.text.replace('Â', '')
+    prix_inc = prix_inc.text.replace('Â', '')
+    dispo = dispo.text.replace('In stock (', '')  # Au début, dispo a un type : <class 'bs4.element.Tag'>
+    dispo = dispo.replace(' available)',
+                          '')  # Mais après avoir utilisé "replace", c'est du type <class 'str'>, c'est pour ça qu'il accepte pas .text
+
+    # print(type(dispo))
+    # print("UPC : ", upc)
+    # print("Prix sans taxe : ", prix_exc)
+    # print("Prix avec taxe : ", prix_inc)
+    # print("Disponibilité : ", dispo + " livres")
+    # print("Reviews : ", review + " reviews")
+
+    ### Description ###
+    p = soup.find_all('p')
+    description = p[3].text
+    # print("Description : ", description)
+
+    ### Categorie ###
+    a = soup.find_all('a')
+    categorie = a[3].text
+    # print("Categorie : ", categorie)
+
+    ### URL Image ###
+    img = soup.find_all('img')
+    image = img[0]
+    image_url = image['src']  # Pour recuperer un attribut
+    image_url = image_url.replace('../../', '')
+    image_url = 'http://books.toscrape.com/' + image_url
+    # URL = 'http://books.toscrape.com/'
+    # print("URL de l'image : ", image_url)
+
+    info_livre = {
+        'titre': titre,
+        'upc': upc,
+        'prix_exc': prix_exc,
+        'prix_inc': prix_inc,
+        'stock': dispo,
+        'review': review,
+        'description': description,
+        'categorie': categorie,
+        'image': image_url
+    }
+
+    return info_livre
+
+def recuperer_liste_categories(html_page): # -> list[str]:
     list_html_categories = html_page.find('aside').find_next('li').find_all('li')
 
     index_categorie = 'http://books.toscrape.com/catalogue/category/'
-    # titres_livres = []
+    titres_categories = []
     racine_categories = []
 
     for nb_elements in range(0, len(list_html_categories)):
@@ -213,10 +275,10 @@ def recuperer_liste_categories(html_page) -> list[str]:
         Recuperer elements des categories
         '''
         # liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
-        # titres_livres.append(list_html_categories[nb_elements].find_next('a').text.replace(' ', '').replace('\n', ''))
+        titres_categories.append(list_html_categories[nb_elements].find_next('a').text.replace(' ', '').replace('\n', ''))
         racine_categories.append(index_categorie + list_html_categories[nb_elements].find_next('a')['href'].replace('../', '').replace('index.html', ''))
 
-    return racine_categories
+    return racine_categories, titres_categories
 
 
 def recuperer_url_page_suivante(html_page: str, nb_de_pages: int): #-> :
@@ -329,16 +391,30 @@ def recuperer_urls_livres_par_categorie(lien_page: str): #-> Tuple[List[Dict[str
 def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
     contenu_html_index = fetch_html(lien_page)
 
-    liens_categories: list[str] = recuperer_liste_categories(contenu_html_index)
+    liens_categories, titres_categories = recuperer_liste_categories(contenu_html_index)
     print('liens des categories : ', liens_categories)
+    print('titres des categories : ', titres_categories)
+
+    dictionnaire = {}
 
     for lien_categorie in liens_categories:
         urls_livres_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
         print('nb de livres de la categorie : ', len(urls_livres_par_categorie))
         print('liens complets des livres par categorie : ', urls_livres_par_categorie)
 
-    # lien_page_suivante: bool = recuperer_lien_page_suivante(contenu_html_categorie)
-    # print('valeur de pager : ', lien_page_suivante)
+        info_livres_par_categorie = []
+        for url_livre_par_categorie in urls_livres_par_categorie:
+            donnes_du_livre = recuperer_donnees_livres(url_livre_par_categorie)
+            info_livres_par_categorie.append(donnes_du_livre)
+
+        print('nombre de livres par categorie (compte des elements de la liste de dictionnaires) : ', len(info_livres_par_categorie))
+        print('liste des donnees des livres d une categorie : ', info_livres_par_categorie)
+
+
+    donnes_livres = recuperer_donnees_livres(urls_livres_par_categorie[0])
+    print('donnees d un livre : ', donnes_livres)
+    dictionnaire = {titres_categories[0]: donnes_livres}
+    print('affichage du dictionnaire : ', dictionnaire)
 
 # def recuperer_information_d_une_page_categorie(lien_vers_la_page: str) -> Tuple[List[Dict[str, str]], bool, str]:
 #     contenu_html_d_une_page_categorie = fetch_html(lien_vers_la_page)
