@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from typing import Dict
+from typing import Dict, List, Tuple
 import csv
 
 tous_urls_categories = []
@@ -23,7 +23,7 @@ def fetch_html(url) -> str:
 
     return contenu_texte
 
-def recuperer_elements(index: str, list_html: str) -> list[str]:
+def recuperer_elements(index: str, list_html: str) -> List[str]:
     '''
     Les éléments à récupérer sont "les liens", "leurs racines" et "les textes" des categories et des livres
     :param index:
@@ -53,7 +53,7 @@ def recuperer_elements(index: str, list_html: str) -> list[str]:
     # return liens_elements
     return racine_elements, titres_elements
 
-def recuperer_elements_categories(url_index: str) -> list[str]:
+def recuperer_elements_categories(url_index: str) -> List[str]:
     retour = fetch_html(url_index)
     list_html_categories = retour.find('aside').find_next('li').find_all('li')
 
@@ -263,22 +263,22 @@ def recuperer_donnees_livres(html_page: str): #->:
 
     return info_livre
 
-def recuperer_liste_categories(html_page): # -> list[str]:
+def recuperer_liste_categories(html_page): # -> List[Tuple[str, str]]:
     list_html_categories = html_page.find('aside').find_next('li').find_all('li')
 
     index_categorie = 'http://books.toscrape.com/catalogue/category/'
-    titres_categories = []
-    racine_categories = []
+    information_categories = []
 
     for nb_elements in range(0, len(list_html_categories)):
         '''
         Recuperer elements des categories
         '''
         # liens_elements.append(index + list_html[nb_elements].find_next('a')['href'].replace('../',''))
-        titres_categories.append(list_html_categories[nb_elements].find_next('a').text.replace(' ', '').replace('\n', ''))
-        racine_categories.append(index_categorie + list_html_categories[nb_elements].find_next('a')['href'].replace('../', '').replace('index.html', ''))
+        titre = list_html_categories[nb_elements].find_next('a').text.replace(' ', '').replace('\n', '')
+        racine = index_categorie + list_html_categories[nb_elements].find_next('a')['href'].replace('../', '').replace('index.html', '')
+        information_categories.append((titre, racine))
 
-    return racine_categories, titres_categories
+    return information_categories
 
 
 def recuperer_url_page_suivante(html_page: str, nb_de_pages: int): #-> :
@@ -388,31 +388,39 @@ def recuperer_urls_livres_par_categorie(lien_page: str): #-> Tuple[List[Dict[str
 
     return urls_livres_par_categorie
 
-def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
+def info_livres(lien_page: str) -> Dict[str, List[Dict[str, str]]]:
     contenu_html_index = fetch_html(lien_page)
 
-    liens_categories, titres_categories = recuperer_liste_categories(contenu_html_index)
-    print('liens des categories : ', liens_categories)
-    print('titres des categories : ', titres_categories)
+    informations_categories: List[Tuple[str, str]] = recuperer_liste_categories(contenu_html_index)
+    print('informations des categories : ', informations_categories)
 
-    dictionnaire = {}
+    info_livres_par_categorie = {}
 
+<<<<<<< HEAD
     # titre_de_la_liste = 0
     for lien_categorie in liens_categories:
+=======
+    for titre_categorie, lien_categorie in informations_categories[0:2]:
+>>>>>>> 74dae0272cb15a8da50725ac918f20ae9cddef3e
         urls_livres_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
         print('nb de livres de la categorie : ', len(urls_livres_par_categorie))
         print('liens complets des livres par categorie : ', urls_livres_par_categorie)
 
+<<<<<<< HEAD
         # titre_de_la_liste = 0
         # nom_du_fichier = str(titres_categories[titre_de_la_liste]) + '.csv'
         # print('nom du fichier csv : ', nom_du_fichier)
         # pose_x = 1
         # pose_y = 2
         info_livres_par_categorie = []
+=======
+        info_livres = []
+>>>>>>> 74dae0272cb15a8da50725ac918f20ae9cddef3e
         for url_livre_par_categorie in urls_livres_par_categorie:
             donnes_du_livre = recuperer_donnees_livres(url_livre_par_categorie)
-            info_livres_par_categorie.append(donnes_du_livre)
+            info_livres.append(donnes_du_livre)
 
+<<<<<<< HEAD
             # nom_du_fichier = str(titres_categories[titre_de_la_liste]) + '.csv'
             # print('nom du fichier csv : ', nom_du_fichier)
 
@@ -434,12 +442,14 @@ def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
         # titre_de_la_liste += 1
         print('nombre de livres par categorie (compte des elements de la liste de dictionnaires) : ', len(info_livres_par_categorie))
         print('liste des donnees des livres d une categorie : ', info_livres_par_categorie)
+=======
+        info_livres_par_categorie[titre_categorie] = info_livres
+>>>>>>> 74dae0272cb15a8da50725ac918f20ae9cddef3e
 
+        print('nombre de livres par categorie (compte des elements de la liste de dictionnaires) : ', len(info_livres))
+        print('liste des donnees des livres d une categorie : ', info_livres)
 
-    donnes_livres = recuperer_donnees_livres(urls_livres_par_categorie[0])
-    print('donnees d un livre : ', donnes_livres)
-    dictionnaire = {titres_categories[0]: donnes_livres}
-    print('affichage du dictionnaire : ', dictionnaire)
+    return info_livres_par_categorie
 
 # def recuperer_information_d_une_page_categorie(lien_vers_la_page: str) -> Tuple[List[Dict[str, str]], bool, str]:
 #     contenu_html_d_une_page_categorie = fetch_html(lien_vers_la_page)
@@ -466,7 +476,15 @@ def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
 
 def main():
     url_index = 'http://books.toscrape.com/catalogue/category/books_1/index.html'
-    info_livres(url_index)
+    info_livres_par_categorie = info_livres(url_index)
+
+    # livre_test = info_livres_par_categorie['Travel'][0]
+    # img_file_name = 'data/images/' + livre_test['upc'] + '.jpg'
+    # resp = requests.get(livre_test['image'])
+
+    # with open(img_file_name, 'wb') as img_file:
+    #     img_file.write(resp.content)
+    return info_livres_par_categorie
 
     # racine_categories, titres_categories = recuperer_elements_categories(url_index) # urls_categories
     # # print("liens des categories : ", urls_categories)
@@ -497,7 +515,8 @@ def main():
     # reponse = fetch_html(url_livre)
     # info = extract_book_info(reponse)
     # print(info)
-    #
+    # for categorie, info_livres_de_la_categorie in infos.items():
+    #    do stuff with categorie and livres
     # with open('livre.csv', 'w', encoding = 'utf8', newline='') as csvfile:
     #     tetes = list(info.keys())
     #     print(tetes)
