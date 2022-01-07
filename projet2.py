@@ -397,16 +397,41 @@ def info_livres(lien_page: str): #-> Dict[str, List[Dict[str, str]]]:
 
     dictionnaire = {}
 
+    # titre_de_la_liste = 0
     for lien_categorie in liens_categories:
         urls_livres_par_categorie = recuperer_urls_livres_par_categorie(lien_categorie)
         print('nb de livres de la categorie : ', len(urls_livres_par_categorie))
         print('liens complets des livres par categorie : ', urls_livres_par_categorie)
 
+        # titre_de_la_liste = 0
+        # nom_du_fichier = str(titres_categories[titre_de_la_liste]) + '.csv'
+        # print('nom du fichier csv : ', nom_du_fichier)
+        # pose_x = 1
+        # pose_y = 2
         info_livres_par_categorie = []
         for url_livre_par_categorie in urls_livres_par_categorie:
             donnes_du_livre = recuperer_donnees_livres(url_livre_par_categorie)
             info_livres_par_categorie.append(donnes_du_livre)
 
+            # nom_du_fichier = str(titres_categories[titre_de_la_liste]) + '.csv'
+            # print('nom du fichier csv : ', nom_du_fichier)
+
+            # with open(nom_du_fichier, 'w', encoding = 'utf8', newline='') as csvfile:
+            #     tetes = list(donnes_du_livre.keys())
+            #     print(tetes)
+            #     donnes_livres_valeurs = list(donnes_du_livre.values())
+            #     print(donnes_livres_valeurs)
+            #
+            #     writer = csv.DictWriter(csvfile, fieldnames=tetes)
+            #     writer.writeheader()
+            #     writer.writerow({tetes[0]:donnes_livres_valeurs[0],tetes[1]:donnes_livres_valeurs[1],tetes[2]:donnes_livres_valeurs[2],tetes[3]:donnes_livres_valeurs[3],tetes[4]:donnes_livres_valeurs[4],tetes[5]:donnes_livres_valeurs[5],tetes[6]:donnes_livres_valeurs[6],tetes[7]:donnes_livres_valeurs[7],tetes[8]:donnes_livres_valeurs[8]})
+            #     # csvfile.write("\n")
+            #     csvfile.write("{},{}".format(pose_x, pose_y))
+            #     csvfile.write("\n")
+
+            # titre_de_la_liste += 1
+
+        # titre_de_la_liste += 1
         print('nombre de livres par categorie (compte des elements de la liste de dictionnaires) : ', len(info_livres_par_categorie))
         print('liste des donnees des livres d une categorie : ', info_livres_par_categorie)
 
