@@ -10,12 +10,11 @@ def fetch_html(url: str) -> BeautifulSoup:
     contenu = requests.get(url)
     if contenu.ok:
         contenu_texte = BeautifulSoup(contenu.text, "html.parser")
-
+        return contenu_texte
     else:
-        contenu_texte = ''
-        print("Il y a un problème de request")
+        # Si on arrive pas à recuperer la page, on arrete le script en erreur
+        raise Exception(f'Il y a un problème de request pour la page url={url}, reponse={contenu.status_code}')
 
-    return contenu_texte
 
 def recuperer_donnees_livres(html_page_url: str) -> Dict[str, str]:
     '''
