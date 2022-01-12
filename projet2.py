@@ -183,8 +183,7 @@ def main():
             tetes = list(info_livres_de_la_categorie[0].keys())
             writer = csv.DictWriter(csvfile, fieldnames=tetes)
             writer.writeheader()
-            for nb_livre in range(len(info_livres_de_la_categorie)):
-                writer.writerow(info_livres_de_la_categorie[nb_livre])
+            writer.writerows(info_livres_de_la_categorie)
 
         '''
         Téléchargement des images de chaque livre et nommées selon l'upc 
