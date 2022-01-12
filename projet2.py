@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from typing import Dict, List, Tuple
 import csv
 
-def fetch_html(url: str) -> str:
+def fetch_html(url: str) -> BeautifulSoup:
     '''
     Récupérer le code html de la page web et s'assurer que la requete http est OK
     '''
@@ -17,11 +17,11 @@ def fetch_html(url: str) -> str:
 
     return contenu_texte
 
-def recuperer_donnees_livres(html_page: str) -> Dict[str, str]:
+def recuperer_donnees_livres(html_page_url: str) -> Dict[str, str]:
     '''
     Récupérer l'info demandée des livres
     '''
-    soup = fetch_html(html_page)
+    soup = fetch_html(html_page_url)
 
     titre = soup.find('h1')
     titre = titre.text
@@ -65,7 +65,8 @@ def recuperer_donnees_livres(html_page: str) -> Dict[str, str]:
 
     return info_livre
 
-def recuperer_liste_categories(html_page: str) -> List[Tuple[str, str]]:
+
+def recuperer_liste_categories(html_page: BeautifulSoup) -> List[Tuple[str, str]]:
     '''
     Récupérer les liens et les titres de chaque catégorie
     '''
@@ -146,7 +147,7 @@ def info_livres(lien_page: str) -> Dict[str, List[Dict[str, str]]]:
     '''
     Obtenir l'info de tous les livres de toutes les catégories en format de dictionnaire
     '''
-    contenu_html_index = fetch_html(lien_page)
+    contenu_html_index: BeautifulSoup = fetch_html(lien_page)
 
     informations_categories: List[Tuple[str, str]] = recuperer_liste_categories(contenu_html_index)
     print('informations des categories : ', informations_categories)
